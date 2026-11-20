@@ -1,0 +1,691 @@
+/* ================================
+   TASK FORM SECTION
+================================ */
+
+.task-form-section {
+    margin-top: 25px;
+    padding: 28px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
+.task-form-heading {
+    margin-bottom: 25px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.task-form-heading h2 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+.task-form-heading p {
+    margin: 8px 0 0;
+    color: #64748b;
+    font-size: 14px;
+}
+
+/* ================================
+   FORM LAYOUT
+================================ */
+
+.task-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    flex: 1;
+    min-width: 0;
+}
+
+.form-group label {
+    color: #334155;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #1e293b;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input,
+.form-group select {
+    min-height: 46px;
+}
+
+.form-group textarea {
+    min-height: 95px;
+    resize: vertical;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: #0891b2;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.12);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: #94a3b8;
+}
+
+.form-row,
+.date-range-row {
+    display: flex;
+    gap: 18px;
+}
+
+.date-range-row > *,
+.form-row > * {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ================================
+   CUSTOM PICKER TRIGGER
+================================ */
+
+.custom-picker {
+    position: relative;
+}
+
+.date-picker-trigger {
+    width: 100%;
+    min-height: 46px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #1e293b;
+    font-family: inherit;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.date-picker-trigger:hover {
+    border-color: #0891b2;
+    background: #ffffff;
+}
+
+.date-picker-trigger:focus-visible {
+    outline: 3px solid rgba(8, 145, 178, 0.2);
+    border-color: #0891b2;
+}
+
+/* ================================
+   CUSTOM CALENDAR POPUP
+================================ */
+
+.calendar-popup {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: min(320px, 100%);
+    padding: 15px;
+    background: #ffffff;
+    border: 1px solid #dbe4ef;
+    border-radius: 14px;
+    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.15);
+    z-index: 100;
+}
+
+.calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 44px;
+}
+
+.calendar-header strong {
+    color: #1e293b;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.calendar-header > button {
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: #334155;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.calendar-header button:hover {
+    background: #cffafe;
+    color: #0e7490;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 5px;
+}
+
+.calendar-weekday {
+    padding: 7px 0;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.calendar-empty {
+    min-height: 35px;
+}
+
+.calendar-day {
+    min-width: 0;
+    min-height: 35px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #334155;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.15s ease;
+}
+
+.calendar-day:hover {
+    background: #ecfeff;
+    color: #0e7490;
+}
+
+.calendar-day.today {
+    border: 1px solid #0891b2;
+    color: #0e7490;
+    font-weight: 700;
+}
+
+.calendar-day.selected {
+    background: #0891b2;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.calendar-day.selected:hover {
+    background: #0e7490;
+    color: #ffffff;
+}
+
+.calendar-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.calendar-footer button {
+    padding: 7px 12px;
+    border: none;
+    border-radius: 7px;
+    background: #ecfeff;
+    color: #0e7490;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.calendar-footer button:hover {
+    background: #cffafe;
+}
+
+/* ================================
+   CUSTOM TIME PICKER
+================================ */
+
+.time-picker-popup {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: min(330px, 100%);
+    padding: 15px;
+    background: #ffffff;
+    border: 1px solid #dbe4ef;
+    border-radius: 14px;
+    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.15);
+    z-index: 110;
+}
+
+.time-picker-columns {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.time-picker-column {
+    min-width: 0;
+    text-align: center;
+}
+
+.time-picker-column > span {
+    display: block;
+    margin-bottom: 9px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.time-picker-column > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 180px;
+    overflow-y: auto;
+    padding: 3px;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.time-picker-option {
+    min-height: 32px;
+    border: none;
+    border-radius: 7px;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.15s ease;
+}
+
+.time-picker-option:hover {
+    background: #ecfeff;
+    color: #0e7490;
+}
+
+.time-picker-option.selected {
+    background: #0891b2;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.time-picker-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.time-picker-actions button {
+    flex: 1;
+    min-height: 36px;
+    border: none;
+    border-radius: 8px;
+    background: #ecfeff;
+    color: #0e7490;
+    font-size: 13px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.time-picker-actions button:last-child {
+    background: #0891b2;
+    color: #ffffff;
+}
+
+.time-picker-actions button:last-child:hover {
+    background: #0e7490;
+}
+
+/* ================================
+   SCHEDULE AND WEEKDAY SELECTOR
+================================ */
+
+.weekday-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+}
+
+.weekday-chip {
+    min-width: 55px;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.weekday-chip:hover {
+    border-color: #0891b2;
+    color: #0e7490;
+}
+
+.weekday-chip.selected {
+    border-color: #0891b2;
+    background: #cffafe;
+    color: #0e7490;
+}
+
+/* ================================
+   IMPORTANT CHECKBOX
+================================ */
+
+.important-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.important-checkbox input {
+    width: 17px;
+    height: 17px;
+    accent-color: #0891b2;
+    cursor: pointer;
+}
+
+/* ================================
+   BUTTONS
+================================ */
+
+.task-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.create-task-button {
+    width: fit-content;
+    min-width: 160px;
+    padding: 13px 22px;
+    border: none;
+    border-radius: 10px;
+    background: #0891b2;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.create-task-button:hover {
+    background: #0e7490;
+    transform: translateY(-1px);
+}
+
+.create-task-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.task-form-cancel-button {
+    min-width: 100px;
+    padding: 13px 20px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.task-form-cancel-button:hover {
+    background: #f1f5f9;
+}
+
+/* ================================
+   FEEDBACK MESSAGES
+================================ */
+
+.form-error {
+    margin: 0;
+    padding: 11px 14px;
+    border-radius: 8px;
+    background: #fef2f2;
+    color: #dc2626;
+    font-size: 13px;
+}
+
+.form-success {
+    margin: 0;
+    padding: 11px 14px;
+    border-radius: 8px;
+    background: #f0fdf4;
+    color: #15803d;
+    font-size: 13px;
+}
+
+/* ================================
+   TABLET RESPONSIVE
+================================ */
+
+@media (max-width: 900px) {
+    .task-form-section {
+        padding: 23px;
+    }
+
+    .calendar-popup,
+    .time-picker-popup {
+        max-width: 100%;
+    }
+}
+
+/* ================================
+   MOBILE RESPONSIVE
+================================ */
+
+@media (max-width: 650px) {
+    .task-form-section {
+        padding: 20px 15px;
+        border-radius: 13px;
+    }
+
+    .task-form-heading h2 {
+        font-size: 19px;
+    }
+
+    .form-row,
+    .date-range-row {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .create-task-button {
+        width: 100%;
+        min-height: 46px;
+    }
+
+    .task-form-cancel-button {
+        width: 100%;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        font-size: 16px;
+    }
+
+    .calendar-popup {
+        width: min(320px, calc(100vw - 70px));
+    }
+
+    .time-picker-popup {
+        width: min(330px, calc(100vw - 70px));
+    }
+
+    .weekday-selector {
+        gap: 7px;
+    }
+
+    .weekday-chip {
+        flex: 1;
+        min-width: 48px;
+        padding: 10px 8px;
+    }
+}
+/* =================================
+   CALENDAR HEADER - FIXED LAYOUT
+================================= */
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr) 30px;
+    align-items: center;
+    gap: 5px;
+    min-height: 38px;
+}
+
+.calendar-header > button {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 20px;
+}
+
+/* Month and year container */
+.calendar-header-selection {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+    width: 100%;
+}
+
+/* Month and year text buttons */
+.calendar-header-selection .calendar-header-select {
+    width: auto;
+    height: 30px;
+    min-width: 0;
+    padding: 4px 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex: 0 1 auto;
+
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+
+    color: #1e293b;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.calendar-header-selection .calendar-header-select:hover {
+    background: #ecfeff;
+    color: #0e7490;
+}
+
+/* Year/month selection heading */
+.calendar-header strong {
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.3;
+}
+
+/* Year selection */
+.calendar-year-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 10px 3px;
+}
+
+/* Month selection */
+.calendar-month-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    padding: 12px 3px;
+}
+
+/* Year/month option buttons */
+.calendar-option {
+    width: 100%;
+    min-width: 0;
+    min-height: 34px;
+    padding: 5px 3px;
+    border: 1px solid #dce8f5;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #263b53;
+    font-size: 12px;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+.calendar-option:hover {
+    background: #eaf5ff;
+    border-color: #20a4d8;
+}
+
+.calendar-option.selected {
+    background: #159ed0;
+    border-color: #159ed0;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* Mobile adjustment */
+@media (max-width: 480px) {
+    .calendar-header-selection {
+        gap: 2px;
+    }
+
+    .calendar-header-selection .calendar-header-select {
+        font-size: 11px;
+        padding: 4px;
+    }
+
+    .calendar-year-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
