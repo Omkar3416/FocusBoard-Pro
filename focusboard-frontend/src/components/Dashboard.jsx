@@ -1,9 +1,8 @@
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { auth } from "../firebase";
 import { signOutUser } from "../auth";
 import {
-    getAllTasks,
     updateTask,
     deleteTask,
 } from "../api/api";
@@ -52,12 +51,13 @@ function groupRecurringTasks(tasks) {
         tasks: sortTasks(group.tasks),
     }));
 }
-
-function Dashboard() {
-    const [tasks, setTasks] = useState([]);
+function Dashboard({ initialTasks = [] }) {
+    const [tasks, setTasks] = useState(() =>
+        sortTasks(initialTasks)
+    );
     const dashboardTopRef = useRef(null);
     const tasksSectionRef = useRef(null);
-    const [loading, setLoading] = useState(true);
+    const [loading] = useState(false);
     const [error, setError] = useState("");
     const [actionError, setActionError] = useState("");
     const [actionLoadingId, setActionLoadingId] = useState(null);
@@ -66,24 +66,6 @@ function Dashboard() {
     const [editingTaskId, setEditingTaskId] = useState(null);
 
     const user = auth.currentUser;
-
-    useEffect(() => {
-        const loadTasks = async () => {
-            try {
-                setError("");
-
-                const data = await getAllTasks();
-                setTasks(sortTasks(data));
-            } catch (error) {
-                console.error("Task loading error:", error);
-                setError(error.message || "Unable to load tasks.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadTasks();
-    }, []);
 
     // Add a newly created task to the dashboard.
     const handleTaskCreated = (newTask) => {

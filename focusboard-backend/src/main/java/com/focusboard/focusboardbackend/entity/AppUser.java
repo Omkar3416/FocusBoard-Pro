@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.util.UUID;
 
 import java.time.LocalDateTime;
 
@@ -41,6 +42,30 @@ public class AppUser {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "deletion_requested_at")
+    private LocalDateTime deletionRequestedAt;
+
+    @Column(name = "deletion_scheduled_at")
+    private LocalDateTime deletionScheduledAt;
+
+    @Column(name = "deletion_previous_enabled")
+    private Boolean deletionPreviousEnabled;
+
+    @Column(name = "deletion_processing_started_at")
+    private LocalDateTime deletionProcessingStartedAt;
+
+    @Column(name = "deletion_processing_token")
+    private UUID deletionProcessingToken;
+
+    @Column(name = "deletion_processing_lease_until")
+    private LocalDateTime deletionProcessingLeaseUntil;
+
+    @Column(name = "deletion_attempt_count", nullable = false)
+    private int deletionAttemptCount = 0;
+
+    @Column(name = "deletion_last_error", columnDefinition = "TEXT")
+    private String deletionLastError;
 
     @PrePersist
     protected void onCreate() {
