@@ -11,9 +11,15 @@ spring:
     username: ${DB_USERNAME:admin}
     password: ${DB_PASSWORD:}
 
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+
   jpa:
+    open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
@@ -33,4 +39,4 @@ management:
       show-details: never
 app:
   security:
-    admin-email: ${ADMIN_EMAIL:}
+    owner-bootstrap-secret: ${OWNER_BOOTSTRAP_SECRET:}

@@ -19,6 +19,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
 
 import java.io.IOException;
 import java.util.List;
@@ -31,6 +33,7 @@ public class FirebaseAuthenticationFilter extends OncePerRequestFilter {
 
     private final FirebaseAuth firebaseAuth;
     private final UserService userService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public FirebaseAuthenticationFilter(
             FirebaseApp firebaseApp,
@@ -149,9 +152,13 @@ public class FirebaseAuthenticationFilter extends OncePerRequestFilter {
 
             SecurityContextHolder.clearContext();
 
-            response.sendError(
-                    HttpServletResponse.SC_FORBIDDEN,
-                    exception.getMessage()
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+
+            objectMapper.writeValue(
+                    response.getWriter(),
+                    Map.of("message", exception.getMessage())
             );
             return;
         }

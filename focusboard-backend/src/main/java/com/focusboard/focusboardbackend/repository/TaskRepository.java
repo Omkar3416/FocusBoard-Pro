@@ -3,6 +3,9 @@ package com.focusboard.focusboardbackend.repository;
 
 import com.focusboard.focusboardbackend.entity.Task;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -33,4 +36,9 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     // Count completed tasks belonging to a particular user
     long countByUser_IdAndCompletedTrue(Long userId);
+
+    // Permanently delete all tasks belonging to a user
+    @Modifying
+    @Query("DELETE FROM Task t WHERE t.user.id = :userId")
+    int deleteAllByUserId(@Param("userId") Long userId);
 }

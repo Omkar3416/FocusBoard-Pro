@@ -1,6 +1,7 @@
 
 package com.focusboard.focusboardbackend.security;
 
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,8 +13,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.context.annotation.Bean;
 
 import java.util.List;
 
@@ -52,7 +51,7 @@ public class SecurityConfig {
         );
 
         configuration.setAllowedMethods(
-                List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         );
 
         configuration.setAllowedHeaders(
@@ -79,6 +78,10 @@ public class SecurityConfig {
 
                 .cors(Customizer.withDefaults())
 
+                .httpBasic(basic -> basic.disable())
+
+                .formLogin(form -> form.disable())
+
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -86,12 +89,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         .requestMatchers("/actuator/health").permitAll()
+// Only ADMIN can perform initial OWNER provisioning.
+                                .requestMatchers("/api/owner/bootstrap")
+                                .hasRole("ADMIN")
 
-                        .requestMatchers("/api/admin/**")
-                        .hasRole("ADMIN")
+// OWNER and ADMIN can access administrative APIs.
+                                .requestMatchers("/api/admin/**")
+                                .hasAnyRole("OWNER", "ADMIN")
 
-                        .requestMatchers("/api/**")
-                        .authenticated()
+// All other API requests require Firebase authentication.
+                                .requestMatchers("/api/**")
+                                .authenticated()
 
                         .anyRequest()
                         .authenticated()
