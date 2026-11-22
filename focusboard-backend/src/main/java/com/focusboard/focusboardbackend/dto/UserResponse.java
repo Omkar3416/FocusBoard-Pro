@@ -11,14 +11,13 @@ import java.time.LocalDateTime;
 public class UserResponse {
 
     private Long id;
-
     private String name;
-
     private String email;
-
     private UserRole role;
-
     private boolean enabled;
-
     private LocalDateTime createdAt;
+
+    private LocalDateTime deletionRequestedAt;
+    private LocalDateTime deletionScheduledAt;
+    private LocalDateTime deletionProcessingStartedAt;
 }

@@ -1,15 +1,17 @@
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { auth } from "../firebase";
 import { signOutUser } from "../auth";
 import {
     updateTask,
     deleteTask,
+    getAllUsers,
 } from "../api/api";
 import TaskForm from "./TaskForm";
 
 import "./Dashboard.css";
 import Calendar from "./Calendar";
+import UserManagement from "./UserManagement";
 
 // Keep tasks ordered by date and then start time.
 function sortTasks(tasks) {
@@ -66,6 +68,56 @@ function Dashboard({ initialTasks = [] }) {
     const [editingTaskId, setEditingTaskId] = useState(null);
 
     const user = auth.currentUser;
+
+    const [managedUsers, setManagedUsers] = useState([]);
+    const [viewerRole, setViewerRole] = useState(null);
+
+    // Identify whether the signed-in account can manage users.
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadManagementAccess = async () => {
+            try {
+                const userList = await getAllUsers();
+
+                if (!Array.isArray(userList)) {
+                    throw new Error("Invalid user list received.");
+                }
+
+                const currentAccount = userList.find(
+                    (account) =>
+                        account.email?.toLowerCase() ===
+                        user?.email?.toLowerCase()
+                );
+
+                if (
+                    currentAccount &&
+                    (currentAccount.role === "OWNER" ||
+                        currentAccount.role === "ADMIN")
+                ) {
+                    if (isMounted) {
+                        setManagedUsers(userList);
+                        setViewerRole(currentAccount.role);
+                    }
+                }
+            } catch (error) {
+                if (error.status !== 403) {
+                    console.error(
+                        "User management access check failed:",
+                        error
+                    );
+                }
+            }
+        };
+
+        if (user?.email) {
+            loadManagementAccess();
+        }
+
+        return () => {
+            isMounted = false;
+        };
+    }, [user?.email]);
 
     // Add a newly created task to the dashboard.
     const handleTaskCreated = (newTask) => {
@@ -309,6 +361,16 @@ function Dashboard({ initialTasks = [] }) {
                     >
                         Completed
                     </button>
+                    {(viewerRole === "OWNER" || viewerRole === "ADMIN") && (
+                        <button
+                            className={`nav-item ${
+                                activeSection === "user-management" ? "active" : ""
+                            }`}
+                            onClick={() => setActiveSection("user-management")}
+                        >
+                            User Management
+                        </button>
+                    )}
                 </nav>
 
                 <button
@@ -336,7 +398,13 @@ function Dashboard({ initialTasks = [] }) {
                     </div>
                 </header>
 
-                {activeSection === "calendar" ? (
+                {activeSection === "user-management" && viewerRole ? (
+                    <UserManagement
+                        users={managedUsers}
+                        viewerRole={viewerRole}
+                        onUsersChange={setManagedUsers}
+                    />
+                ) : activeSection === "calendar" ? (
                     <Calendar
                         tasks={tasks}
                         onToggleCompleted={handleToggleCompleted}

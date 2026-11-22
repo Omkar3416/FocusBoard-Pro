@@ -188,7 +188,10 @@ public class UserService {
                         user.getEmail(),
                         user.getRole(),
                         user.isEnabled(),
-                        user.getCreatedAt()
+                        user.getCreatedAt(),
+                        user.getDeletionRequestedAt(),
+                        user.getDeletionScheduledAt(),
+                        user.getDeletionProcessingStartedAt()
                 ))
                 .toList();
     }
@@ -328,7 +331,10 @@ public class UserService {
                 updatedUser.getEmail(),
                 updatedUser.getRole(),
                 updatedUser.isEnabled(),
-                updatedUser.getCreatedAt()
+                updatedUser.getCreatedAt(),
+                updatedUser.getDeletionRequestedAt(),
+                updatedUser.getDeletionScheduledAt(),
+                updatedUser.getDeletionProcessingStartedAt()
         );
     }
 
@@ -492,7 +498,10 @@ public class UserService {
                 updatedUser.getEmail(),
                 updatedUser.getRole(),
                 updatedUser.isEnabled(),
-                updatedUser.getCreatedAt()
+                updatedUser.getCreatedAt(),
+                updatedUser.getDeletionRequestedAt(),
+                updatedUser.getDeletionScheduledAt(),
+                updatedUser.getDeletionProcessingStartedAt()
         );
     }
 

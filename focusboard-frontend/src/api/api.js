@@ -81,4 +81,45 @@ export const deleteTask = (taskId) => {
     });
 };
 
+
+// ==========================================
+// USER MANAGEMENT APIs (OWNER / ADMIN)
+// ==========================================
+
+// Get all registered users.
+export const getAllUsers = () => {
+    return apiRequest("/admin/users");
+};
+
+// Promote a USER account to ADMIN.
+export const promoteUserToAdmin = (userId) => {
+    return apiRequest("/admin/users/promote", {
+        method: "POST",
+        body: JSON.stringify({ userId }),
+    });
+};
+
+// Enable or disable a user account.
+export const updateUserStatus = (userId, enabled) => {
+    return apiRequest(`/admin/users/${userId}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ enabled }),
+    });
+};
+
+// Request permanent account deletion.
+export const requestAccountDeletion = (userId) => {
+    return apiRequest(`/admin/users/${userId}/deletion`, {
+        method: "POST",
+    });
+};
+
+// Cancel a pending account deletion.
+export const cancelAccountDeletion = (userId) => {
+    return apiRequest(`/admin/users/${userId}/deletion`, {
+        method: "DELETE",
+    });
+};
+
+
 export default apiRequest;
