@@ -23,6 +23,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import com.focusboard.focusboardbackend.dto.TaskDeletionResponse;
 import java.time.LocalDateTime;
+import com.focusboard.focusboardbackend.dto.OldTasksDeletionPreviewResponse;
+import java.time.ZoneId;
 
 @Service
 @RequiredArgsConstructor
@@ -295,6 +297,67 @@ public class TaskService {
         }
 
         return temporarilyDeleteTasks(seriesTasks);
+    }
+
+    // Preview active tasks older than five days before deletion.
+    @Transactional(readOnly = true)
+    public OldTasksDeletionPreviewResponse previewOldTasksDeletion(
+            Long userId
+    ) {
+
+        LocalDate cutoffDate = LocalDate.now(
+                ZoneId.of("Asia/Kolkata")
+        ).minusDays(5);
+
+        List<Task> oldTasks =
+                taskRepository.findAllActiveTasksOlderThan(
+                        userId,
+                        cutoffDate
+                );
+
+        if (oldTasks.isEmpty()) {
+            return new OldTasksDeletionPreviewResponse(
+                    cutoffDate,
+                    0,
+                    null,
+                    null
+            );
+        }
+
+        LocalDate oldestTaskDate = oldTasks.get(0).getTaskDate();
+
+        LocalDate newestTaskDate =
+                oldTasks.get(oldTasks.size() - 1).getTaskDate();
+
+        return new OldTasksDeletionPreviewResponse(
+                cutoffDate,
+                oldTasks.size(),
+                oldestTaskDate,
+                newestTaskDate
+        );
+    }
+
+
+    // Temporarily delete all active tasks older than five days.
+    public TaskDeletionResponse deleteOldTasks(Long userId) {
+
+        LocalDate cutoffDate = LocalDate.now(
+                ZoneId.of("Asia/Kolkata")
+        ).minusDays(5);
+
+        List<Task> oldTasks =
+                taskRepository.findAllActiveTasksOlderThan(
+                        userId,
+                        cutoffDate
+                );
+
+        if (oldTasks.isEmpty()) {
+            throw new IllegalStateException(
+                    "No eligible old tasks found for deletion"
+            );
+        }
+
+        return temporarilyDeleteTasks(oldTasks);
     }
 
     // Apply one deletion batch to the selected tasks

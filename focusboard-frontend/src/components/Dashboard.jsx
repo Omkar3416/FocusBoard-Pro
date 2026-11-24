@@ -6,6 +6,9 @@ import {
     deleteTask,
     deleteTaskSeries,
     undoTaskDeletion,
+    previewOldTasksDeletion,
+    deleteOldTasks,
+    getAllTasks,
     getAllUsers,
 } from "../api/api";
 import TaskForm from "./TaskForm";
@@ -129,6 +132,12 @@ function Dashboard({initialTasks = []}) {
     const [deletionTarget, setDeletionTarget] = useState(null);
     const [isDeletingTask, setIsDeletingTask] = useState(false);
     const [undoBatches, setUndoBatches] = useState([]);
+
+    // Preview and confirmation state for bulk deletion of old tasks.
+    const [oldTasksPreview, setOldTasksPreview] = useState(null);
+    const [isLoadingOldTasksPreview, setIsLoadingOldTasksPreview] = useState(false);
+    const [isDeletingOldTasks, setIsDeletingOldTasks] = useState(false);
+    const [oldTasksDeletionError, setOldTasksDeletionError] = useState("");
 
     const user = auth.currentUser;
 
@@ -392,25 +401,49 @@ function Dashboard({initialTasks = []}) {
         try {
             setActionError("");
 
+            // Restore the complete deletion batch in the backend.
             await undoTaskDeletion(batch.batchId);
 
-            setTasks((previousTasks) =>
-                sortTasks([
-                    ...previousTasks,
-                    ...batch.deletedTasks.filter(
-                        (deletedTask) =>
-                            !previousTasks.some(
-                                (task) => task.id === deletedTask.id
-                            )
-                    ),
-                ])
-            );
-
+            // Remove the Undo notification after successful restoration.
             setUndoBatches((previousBatches) =>
                 previousBatches.filter(
                     (item) => item.batchId !== batch.batchId
                 )
             );
+
+            // Reload the authoritative task list from the backend.
+            try {
+                const restoredTasks = await getAllTasks();
+
+                if (!Array.isArray(restoredTasks)) {
+                    throw new Error("Invalid task list received.");
+                }
+
+                setTasks(sortTasks(restoredTasks));
+
+            } catch (refreshError) {
+                console.error(
+                    "Task list refresh after Undo failed:",
+                    refreshError
+                );
+
+                // Preserve the existing local restoration as a fallback.
+                setTasks((previousTasks) =>
+                    sortTasks([
+                        ...previousTasks,
+                        ...batch.deletedTasks.filter(
+                            (deletedTask) =>
+                                !previousTasks.some(
+                                    (task) => task.id === deletedTask.id
+                                )
+                        ),
+                    ])
+                );
+
+                setActionError(
+                    "Tasks were restored, but the task list could not be refreshed. Please refresh the page."
+                );
+            }
 
         } catch (error) {
             console.error("Task restoration error:", error);
@@ -418,6 +451,127 @@ function Dashboard({initialTasks = []}) {
             setActionError(
                 error.message || "Unable to restore deleted tasks."
             );
+        }
+    };
+
+    // Load a preview of all eligible old tasks for the signed-in user.
+    const handlePreviewOldTasksDeletion = async () => {
+        try {
+            setIsLoadingOldTasksPreview(true);
+            setOldTasksDeletionError("");
+            setOldTasksPreview(null);
+            setActionError("");
+
+            const response = await previewOldTasksDeletion();
+
+            if (
+                !response ||
+                typeof response.taskCount !== "number" ||
+                !response.cutoffDate
+            ) {
+                throw new Error("Invalid old-tasks preview received.");
+            }
+
+            setOldTasksPreview(response);
+
+        } catch (error) {
+            console.error("Old tasks preview error:", error);
+
+            setOldTasksDeletionError(
+                error.message || "Unable to load old tasks preview."
+            );
+
+        } finally {
+            setIsLoadingOldTasksPreview(false);
+        }
+    };
+
+
+// Confirm bulk deletion of all eligible old tasks.
+    const confirmDeleteOldTasks = async () => {
+        if (
+            !oldTasksPreview ||
+            oldTasksPreview.taskCount === 0 ||
+            isDeletingOldTasks
+        ) {
+            return;
+        }
+
+        try {
+            setIsDeletingOldTasks(true);
+            setOldTasksDeletionError("");
+
+            // Keep a local snapshot as a fallback for Undo.
+            const eligibleTasks = tasks.filter(
+                (task) => task.taskDate < oldTasksPreview.cutoffDate
+            );
+
+            const response = await deleteOldTasks();
+
+            if (!response?.batchId || !response?.expiresAt) {
+                throw new Error("Invalid bulk deletion response received.");
+            }
+
+            const expiresAtMs = new Date(response.expiresAt).getTime();
+
+            if (Number.isNaN(expiresAtMs)) {
+                throw new Error("Invalid deletion expiry time received.");
+            }
+
+            // Immediately remove tasks covered by the preview cutoff.
+            setTasks((previousTasks) =>
+                previousTasks.filter(
+                    (task) => task.taskDate >= oldTasksPreview.cutoffDate
+                )
+            );
+
+            // Register the batch in the existing five-minute Undo system.
+            setUndoBatches((previousBatches) => [
+                ...previousBatches,
+                {
+                    batchId: response.batchId,
+                    deletedTasks: eligibleTasks,
+                    deletedCount: response.deletedCount ?? eligibleTasks.length,
+                    expiresAtMs,
+                    remainingSeconds: Math.max(
+                        0,
+                        Math.ceil((expiresAtMs - Date.now()) / 1000)
+                    ),
+                },
+            ]);
+
+            setOldTasksPreview(null);
+
+            // Refresh the task list using the backend's actual state.
+            try {
+                const refreshedTasks = await getAllTasks();
+
+                if (!Array.isArray(refreshedTasks)) {
+                    throw new Error("Invalid task list received.");
+                }
+
+                setTasks(sortTasks(refreshedTasks));
+
+            } catch (refreshError) {
+                console.error(
+                    "Task list refresh after bulk deletion failed:",
+                    refreshError
+                );
+
+                setOldTasksDeletionError(
+                    "Old tasks were deleted, but the task list could not be refreshed. Please refresh the page."
+                );
+            }
+
+        } catch (error) {
+            console.error("Old tasks bulk deletion error:", error);
+
+            setOldTasksDeletionError(
+                error.message || "Unable to delete old tasks."
+            );
+
+        } finally {
+            setIsDeletingOldTasks(false);
         }
     };
 
@@ -550,6 +704,124 @@ function Dashboard({initialTasks = []}) {
 
     return (
         <div className="dashboard-container">
+
+            {/* Bulk deletion preview and confirmation dialog */}
+            {oldTasksPreview && (
+                <div
+                    className="task-deletion-overlay"
+                    onClick={() => {
+                        if (!isDeletingOldTasks) {
+                            setOldTasksPreview(null);
+                            setOldTasksDeletionError("");
+                        }
+                    }}
+                >
+                    <div
+                        className="task-deletion-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="old-tasks-deletion-title"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <div className="task-deletion-icon">
+                            !
+                        </div>
+
+                        <h2 id="old-tasks-deletion-title">
+                            Delete old tasks?
+                        </h2>
+
+                        {oldTasksPreview.taskCount > 0 ? (
+                            <>
+                                <p>
+                                    The following tasks will be temporarily deleted:
+                                </p>
+
+                                <div className="old-tasks-preview-details">
+                                    <p>
+                                        <strong>Tasks:</strong>{" "}
+                                        {oldTasksPreview.taskCount}
+                                    </p>
+
+                                    <p>
+                                        <strong>Oldest task:</strong>{" "}
+                                        {formatTaskDate(oldTasksPreview.oldestTaskDate)}
+                                    </p>
+
+                                    <p>
+                                        <strong>Newest task:</strong>{" "}
+                                        {formatTaskDate(oldTasksPreview.newestTaskDate)}
+                                    </p>
+
+                                    <p>
+                                        <strong>Cutoff date:</strong>{" "}
+                                        {formatTaskDate(oldTasksPreview.cutoffDate)}
+                                    </p>
+
+                                    <p>
+                                        Only tasks dated before the cutoff date will be deleted.
+                                        Both completed and pending tasks are included.
+                                    </p>
+
+                                    <p>
+                                        You can undo this deletion within five minutes.
+                                    </p>
+                                </div>
+
+                                <div className="task-deletion-actions">
+                                    <button
+                                        type="button"
+                                        className="deletion-button deletion-button-series"
+                                        onClick={confirmDeleteOldTasks}
+                                        disabled={isDeletingOldTasks}
+                                    >
+                                        {isDeletingOldTasks
+                                            ? "Deleting..."
+
+                                            : `Delete ${oldTasksPreview.taskCount} ${
+                                                oldTasksPreview.taskCount === 1 ? "task" : "tasks"
+                                            }`}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        className="deletion-button deletion-button-cancel"
+                                        onClick={() => {
+                                            setOldTasksPreview(null);
+                                            setOldTasksDeletionError("");
+                                        }}
+                                        disabled={isDeletingOldTasks}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <p>
+                                    No eligible old tasks were found.
+                                </p>
+
+                                <div className="task-deletion-actions">
+                                    <button
+                                        type="button"
+                                        className="deletion-button deletion-button-cancel"
+                                        onClick={() => setOldTasksPreview(null)}
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </>
+                        )}
+
+                        {oldTasksDeletionError && (
+                            <p className="dashboard-error">
+                                {oldTasksDeletionError}
+                            </p>
+                        )}
+                    </div>
+                </div>
+            )}
             {/* Task deletion confirmation dialog */}
             {deletionTarget && (
                 <div
@@ -651,9 +923,9 @@ function Dashboard({initialTasks = []}) {
                         >
                             <div className="task-undo-message">
                                 <strong>
-                                    {batch.deletedTasks.length === 1
+                                    {(batch.deletedCount ?? batch.deletedTasks.length) === 1
                                         ? "Task deleted"
-                                        : `${batch.deletedTasks.length} tasks deleted`}
+                                        : `${batch.deletedCount ?? batch.deletedTasks.length} tasks deleted`}
                                 </strong>
 
                                 <span>
@@ -744,6 +1016,25 @@ function Dashboard({initialTasks = []}) {
                     )}
                 </nav>
 
+                {/* Bulk delete old tasks */}
+                <button
+                    type="button"
+                    className="sidebar-action-button"
+                    onClick={handlePreviewOldTasksDeletion}
+                    disabled={isLoadingOldTasksPreview || isDeletingOldTasks}
+                >
+                    {isLoadingOldTasksPreview
+                        ? "Checking old tasks..."
+                        : "Delete Old Tasks"}
+                </button>
+
+                {oldTasksDeletionError && !oldTasksPreview && (
+                    <p className="dashboard-error sidebar-deletion-error">
+                        {oldTasksDeletionError}
+                    </p>
+                )}
+
+                {/* Sign Out */}
                 <button
                     className="sign-out-button"
                     onClick={handleSignOut}
@@ -763,7 +1054,6 @@ function Dashboard({initialTasks = []}) {
                             Welcome back, {user?.displayName || "User"}!
                         </p>
                     </div>
-
                     <div className="profile-section">
                         <span>{user?.email}</span>
                     </div>

@@ -1975,3 +1975,95 @@
         max-width: 100%;
     }
 }
+/* =========================================
+   SIDEBAR - BOTTOM ACTION BUTTONS
+========================================= */
+
+.sidebar-action-button,
+.sidebar .sign-out-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    min-height: 44px;
+    margin-bottom: 0;
+    padding: 12px 14px;
+
+    border: 1px solid rgba(251, 113, 133, 0.38);
+    border-radius: 11px;
+
+    background: rgba(225, 29, 72, 0.12);
+    color: #fecdd3;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 650;
+    text-align: center;
+
+    cursor: pointer;
+
+    transition:
+            background 0.22s ease,
+            border-color 0.22s ease,
+            color 0.22s ease,
+            box-shadow 0.22s ease,
+            transform 0.22s ease;
+}
+
+/* Push both buttons together to the sidebar bottom. */
+.sidebar-action-button {
+    margin-top: auto;
+}
+
+/* Keep Sign Out directly below Delete Old Tasks. */
+.sidebar .sign-out-button {
+    margin-top: 10px;
+}
+
+/* Shared hover effect. */
+.sidebar-action-button:hover:not(:disabled),
+.sidebar .sign-out-button:hover {
+    background: #e83e8c;
+    border-color: #e83e8c;
+    color: #ffffff;
+
+    box-shadow: 0 6px 18px rgba(232, 62, 140, 0.22);
+    transform: translateY(-1px);
+}
+
+/* Keyboard accessibility. */
+.sidebar-action-button:focus-visible,
+.sidebar .sign-out-button:focus-visible {
+    outline: 3px solid #67e8f9;
+    outline-offset: 3px;
+}
+
+/* Disabled state. */
+.sidebar-action-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Mobile */
+@media (max-width: 650px) {
+    .sidebar-action-button,
+    .sidebar .sign-out-button {
+        width: 100%;
+        min-height: 42px;
+        padding: 10px 13px;
+        font-size: 13px;
+    }
+
+    .sidebar-action-button {
+        margin-top: 10px;
+    }
+
+    .sidebar .sign-out-button {
+        margin-top: 9px;
+        align-self: stretch;
+        min-width: 0;
+    }
+}
