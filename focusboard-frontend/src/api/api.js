@@ -96,6 +96,17 @@ export const undoTaskDeletion = (batchId) => {
     });
 };
 
+// Preview old tasks before bulk deletion
+export const previewOldTasksDeletion = () => {
+    return apiRequest("/tasks/old-tasks/preview");
+};
+
+// Temporarily delete all eligible old tasks
+export const deleteOldTasks = () => {
+    return apiRequest("/tasks/old-tasks", {
+        method: "DELETE",
+    });
+};
 
 
 // ==========================================

@@ -34,6 +34,20 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("userId") Long userId
     );
 
+    // Find all active tasks older than the specified cutoff date.
+// Includes both completed and pending tasks.
+    @Query("""
+        SELECT t FROM Task t
+        WHERE t.user.id = :userId
+        AND t.taskDate < :cutoffDate
+        AND t.deletedAt IS NULL
+        ORDER BY t.taskDate ASC, t.startTime ASC
+        """)
+    List<Task> findAllActiveTasksOlderThan(
+            @Param("userId") Long userId,
+            @Param("cutoffDate") LocalDate cutoffDate
+    );
+
     // Get active tasks belonging to a user on a particular date
     @Query("""
             SELECT t FROM Task t

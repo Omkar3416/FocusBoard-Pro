@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import com.focusboard.focusboardbackend.dto.OldTasksDeletionPreviewResponse;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -58,6 +59,20 @@ public class TaskController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(responses);
+    }
+
+    // Preview old tasks eligible for bulk deletion
+    @GetMapping("/old-tasks/preview")
+    public ResponseEntity<OldTasksDeletionPreviewResponse> previewOldTasksDeletion(
+            @AuthenticationPrincipal AppUser currentUser
+    ) {
+
+        OldTasksDeletionPreviewResponse response =
+                taskService.previewOldTasksDeletion(
+                        currentUser.getId()
+                );
+
+        return ResponseEntity.ok(response);
     }
 
     // Get all active tasks belonging to the logged-in user
@@ -118,6 +133,19 @@ public class TaskController {
         );
 
         return ResponseEntity.ok(updatedTask);
+    }
+
+    // Temporarily delete all eligible old tasks
+    @DeleteMapping("/old-tasks")
+    public ResponseEntity<TaskDeletionResponse> deleteOldTasks(
+            @AuthenticationPrincipal AppUser currentUser
+    ) {
+
+        TaskDeletionResponse response = taskService.deleteOldTasks(
+                currentUser.getId()
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     // Temporarily delete one task occurrence
