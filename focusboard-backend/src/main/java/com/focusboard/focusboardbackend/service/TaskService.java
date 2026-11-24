@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.focusboard.focusboardbackend.dto.TaskDeletionResponse;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -260,13 +262,99 @@ public class TaskService {
         return mapToResponse(updatedTask);
     }
 
-    // Delete a task belonging to a user
-    public void deleteTask(Long taskId, Long userId) {
+
+    // Temporarily delete only the selected task occurrence
+    public TaskDeletionResponse deleteTask(Long taskId, Long userId) {
 
         Task task = getTaskByIdAndUser(taskId, userId);
 
-        taskRepository.delete(task);
+        return temporarilyDeleteTasks(List.of(task));
     }
+
+    // Temporarily delete all active occurrences in a recurring series
+    public TaskDeletionResponse deleteTaskSeries(
+            Long taskId,
+            Long userId
+    ) {
+
+        Task task = getTaskByIdAndUser(taskId, userId);
+
+        if (task.getRecurrenceGroupId() == null) {
+            return temporarilyDeleteTasks(List.of(task));
+        }
+
+        List<Task> seriesTasks =
+                taskRepository
+                        .findAllByRecurrenceGroupIdAndUser_IdAndDeletedAtIsNull(
+                                task.getRecurrenceGroupId(),
+                                userId
+                        );
+
+        if (seriesTasks.isEmpty()) {
+            throw new EntityNotFoundException("No active tasks found in this series");
+        }
+
+        return temporarilyDeleteTasks(seriesTasks);
+    }
+
+    // Apply one deletion batch to the selected tasks
+    private TaskDeletionResponse temporarilyDeleteTasks(
+            List<Task> tasks
+    ) {
+
+        LocalDateTime deletedAt = LocalDateTime.now();
+        LocalDateTime expiresAt = deletedAt.plusMinutes(5);
+        UUID batchId = UUID.randomUUID();
+
+        for (Task task : tasks) {
+            task.setDeletedAt(deletedAt);
+            task.setDeletionBatchId(batchId);
+        }
+
+        taskRepository.saveAll(tasks);
+
+        return new TaskDeletionResponse(
+                batchId,
+                tasks.size(),
+                expiresAt
+        );
+    }
+
+    // Restore tasks from a deletion batch within five minutes
+    public int undoDeletion(UUID batchId, Long userId) {
+
+        List<Task> deletedTasks =
+                taskRepository
+                        .findAllByDeletionBatchIdAndUser_IdAndDeletedAtIsNotNull(
+                                batchId,
+                                userId
+                        );
+
+        if (deletedTasks.isEmpty()) {
+            throw new EntityNotFoundException(
+                    "Deletion batch not found or already permanently deleted"
+            );
+        }
+
+        LocalDateTime expiresAt =
+                deletedTasks.get(0).getDeletedAt().plusMinutes(5);
+
+        if (!LocalDateTime.now().isBefore(expiresAt)) {
+            throw new IllegalStateException(
+                    "The five-minute undo period has expired"
+            );
+        }
+
+        for (Task task : deletedTasks) {
+            task.setDeletedAt(null);
+            task.setDeletionBatchId(null);
+        }
+
+        taskRepository.saveAll(deletedTasks);
+
+        return deletedTasks.size();
+    }
+
 
     private AppUser getUserById(Long userId) {
 

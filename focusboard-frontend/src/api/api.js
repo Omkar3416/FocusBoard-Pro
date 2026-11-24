@@ -74,12 +74,28 @@ export const updateTask = (taskId, taskData) => {
     });
 };
 
-// Delete task
+
+// Temporarily delete one task occurrence
 export const deleteTask = (taskId) => {
     return apiRequest(`/tasks/${taskId}`, {
         method: "DELETE",
     });
 };
+
+// Temporarily delete an entire recurring series
+export const deleteTaskSeries = (taskId) => {
+    return apiRequest(`/tasks/${taskId}/series`, {
+        method: "DELETE",
+    });
+};
+
+// Undo a temporary task deletion
+export const undoTaskDeletion = (batchId) => {
+    return apiRequest(`/tasks/deletions/${batchId}/undo`, {
+        method: "POST",
+    });
+};
+
 
 
 // ==========================================
