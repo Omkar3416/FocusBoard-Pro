@@ -73,6 +73,13 @@ public class Task {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    // Temporary deletion support (5-minute undo)
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deletion_batch_id")
+    private UUID deletionBatchId;
+
     @PrePersist
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();

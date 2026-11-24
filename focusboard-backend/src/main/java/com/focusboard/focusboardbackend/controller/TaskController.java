@@ -2,6 +2,7 @@
 package com.focusboard.focusboardbackend.controller;
 
 import com.focusboard.focusboardbackend.dto.RecurringTaskRequest;
+import com.focusboard.focusboardbackend.dto.TaskDeletionResponse;
 import com.focusboard.focusboardbackend.dto.TaskRequest;
 import com.focusboard.focusboardbackend.dto.TaskResponse;
 import com.focusboard.focusboardbackend.entity.AppUser;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -58,7 +60,7 @@ public class TaskController {
                 .body(responses);
     }
 
-    // Get all tasks belonging to the logged-in user
+    // Get all active tasks belonging to the logged-in user
     @GetMapping
     public ResponseEntity<List<TaskResponse>> getAllTasks(
             @AuthenticationPrincipal AppUser currentUser
@@ -71,7 +73,7 @@ public class TaskController {
         return ResponseEntity.ok(tasks);
     }
 
-    // Get tasks for a particular date
+    // Get active tasks for a particular date
     @GetMapping("/date")
     public ResponseEntity<List<TaskResponse>> getTasksByDate(
             @AuthenticationPrincipal AppUser currentUser,
@@ -86,7 +88,7 @@ public class TaskController {
         return ResponseEntity.ok(tasks);
     }
 
-    // Get a specific task by ID
+    // Get a specific active task by ID
     @GetMapping("/{id}")
     public ResponseEntity<TaskResponse> getTaskById(
             @AuthenticationPrincipal AppUser currentUser,
@@ -101,7 +103,7 @@ public class TaskController {
         return ResponseEntity.ok(task);
     }
 
-    // Update an existing task
+    // Update an existing active task
     @PutMapping("/{id}")
     public ResponseEntity<TaskResponse> updateTask(
             @AuthenticationPrincipal AppUser currentUser,
@@ -118,18 +120,48 @@ public class TaskController {
         return ResponseEntity.ok(updatedTask);
     }
 
-    // Delete a task
+    // Temporarily delete one task occurrence
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTask(
+    public ResponseEntity<TaskDeletionResponse> deleteTask(
             @AuthenticationPrincipal AppUser currentUser,
             @PathVariable Long id
     ) {
 
-        taskService.deleteTask(
+        TaskDeletionResponse response = taskService.deleteTask(
                 id,
                 currentUser.getId()
         );
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(response);
+    }
+
+    // Temporarily delete an entire recurring series
+    @DeleteMapping("/{id}/series")
+    public ResponseEntity<TaskDeletionResponse> deleteTaskSeries(
+            @AuthenticationPrincipal AppUser currentUser,
+            @PathVariable Long id
+    ) {
+
+        TaskDeletionResponse response = taskService.deleteTaskSeries(
+                id,
+                currentUser.getId()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    // Undo a temporary deletion
+    @PostMapping("/deletions/{batchId}/undo")
+    public ResponseEntity<Integer> undoDeletion(
+            @AuthenticationPrincipal AppUser currentUser,
+            @PathVariable UUID batchId
+    ) {
+
+        int restoredCount = taskService.undoDeletion(
+                batchId,
+                currentUser.getId()
+        );
+
+        return ResponseEntity.ok(restoredCount);
     }
 }
